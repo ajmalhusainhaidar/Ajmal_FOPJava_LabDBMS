@@ -1,0 +1,104 @@
+=====================================================================================================================================
+Question-4) Display the total number of customers based on gender who have placed individual orders of worth at least Rs.3000.
+Ans:-below
+===================================================================================================================================
+select count(T2.CUS_gender) as no_of_customer,T2.cus_gender as gender from
+(
+select T1.cus_id,T1.cus_gender,T1.ORD_AMOUNT,T1.cus_name from
+(
+select o.*,c.cus_name,c.cus_gender from orders as o
+inner join customer as c
+ON c.CUS_ID=o.CUS_ID having o.ORD_AMOUNT>=3000
+)as T1
+)as T2 group by T2.cus_gender;
+=====================================================================================================================================
+Question-5) Display all the orders along with product name ordered by a customer having Customer_Id=2
+Ans:-below
+=====================================================================================================================================
+select q.*,product.PRO_NAME from
+(
+select c.CUS_ID,c.CUS_NAME, P.ORD_ID,P.ORD_AMOUNT,P.PRO_ID FROM
+(
+	SELECT O.*,SP.PRO_ID FROM orders AS O
+	INNER JOIN supplier_pricing AS SP
+	WHERE O.PRICING_ID=sp.PRICING_ID
+) AS P
+	INNER JOIN CUSTOMER AS C
+	where P.CUS_ID=C.CUS_ID=2
+)AS Q
+inner join product
+on q.pro_id= product_pro_id;
+
+
+=====================================================================================================================================
+Question-6) Display the Supplier details who can supply more than one product.
+Ans:-below
+=====================================================================================================================================
+select sup.* from supplier as sup where sup.supp_id in
+(
+select sp.supp_id from supplier_pricing as sp group by sp.supp_id having count(sp.supp_id)>1
+);
+
+
+=====================================================================================================================================
+Question-7) Find the least expensive product from each category and print the table with category id, name, product name and price of the product
+Ans:-below
+=====================================================================================================================================
+select c.CAT_ID,c.cat_NAME, min(t3.min_price) as Min_Price from category as c
+inner join
+(
+select p.CAT_ID, p.pro_name, t2.*from product as p
+inner join
+(
+select pro_id, min(supp_price)as Min_price from supplier_pricing group by PRO_ID
+)as t2 on t2.PRO_ID=p.pro_id
+) as T3 on T3.CAT_ID=c.CAT_ID group by t3.cat_id;
+
+
+=====================================================================================================================================
+Question-8) Display the Id and Name of the Product ordered after “2021-10-05”.
+Ans:-below
+=====================================================================================================================================
+select p.pro_id, p.PRO_NAME from product as p
+inner join
+(
+select o.*, sp.pro_id from orders as o
+inner join
+supplier_pricing as sp on sp.PRICING_ID=o.PRICING_ID and o.ORD_DATE>"2021-10-05"
+) as q
+on p.PRO_ID=q.pro_id;
+
+
+
+=====================================================================================================================================
+Question-9) Display customer name and gender whose names start or end with character 'A'.
+Ans:-below
+=====================================================================================================================================
+select customer.CUS_NAME,customer.CUS_GENDER from customer where customer.CUS_NAME like 'A%'or customer.CUS_NAME like '%A'
+
+
+=====================================================================================================================================
+Question-10) Create a stored procedure to display supplier id, name, Rating(Average rating of all the products sold by every customer) and
+Type_of_Service. For Type_of_Service, If rating =5, print “Excellent Service”,If rating >4 print “Good Service”, If rating >2 print “Average
+Service” else print “Poor Service”. Note that there should be one rating per supplier.
+Ans:-below
+=====================================================================================================================================
+select report.SUPP_ID, report.Average,
+CASE 
+	when report.Average =5 then'Excellent Service'
+	when report.Average >4 then'Good Service'
+	when report.Average >2 then'Average Service'
+else 'Poor Service' 
+end as type_of_service from
+(
+select test2.SUPP_ID,avg(rat_ratstars) as average from
+(
+select sp.supp_id, t1.ord_id,t1.rat_ratstars from supplier_pricing as sp
+Inner join
+(
+select o.pricing_id,rat.ord_id, rat.rat_ratstars from orders as o
+inner join
+rating as rat on o.ord_id= rat.ORD_ID
+) as t1 on sp.pricing_id=t1.PRICING_ID
+) as test2 group by test2.supp_id) as report
+=====================================================================================================================================

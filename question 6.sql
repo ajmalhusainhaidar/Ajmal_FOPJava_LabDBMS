@@ -1,0 +1,4 @@
+select sup.* from supplier as sup where sup.supp_id in
+(
+select sp.supp_id from supplier_pricing as sp group by sp.supp_id having count(sp.supp_id)>1
+);
